@@ -3,54 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DK CRM Pro - Web Studio</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>DK-CRM</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { font-family: Arial; background: #f5f5f5; padding: 20px; }
+  .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  h1 { color: #333; text-align: center; }
+  input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+  button { background: #4CAF50; color: white; border: none; cursor: pointer; font-weight: bold; }
+  button:hover { background: #45a049; }
+  .client { background: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 5px; display: flex; justify-content: space-between; }
+</style>
 </head>
-<body class="bg-gray-950 text-white p-6">
-  <div class="max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold mb-2 text-green-400">DK CRM Pro</h1>
-    <p class="text-gray-400 mb-6">Le CRM qui sauve vraiment</p>
-    
-    <div class="bg-gray-900 p-4 rounded-lg mb-6">
-      <input id="nom" placeholder="Nom du Client" class="bg-gray-800 p-2 rounded w-full mb-2">
-      <input id="montant" placeholder="Montant FC" type="number" class="bg-gray-800 p-2 rounded w-full mb-2">
-      <button onclick="ajouterClient()" class="bg-green-600 hover:bg-green-700 p-2 rounded w-full font-bold">+ Ajouter Client</button>
-    </div>
+<body>
+<div class="container">
+  <h1>DK-CRM</h1>
+  
+  <h3>Ajouter un client</h3>
+  <input type="text" id="nom" placeholder="Nom du client">
+  <input type="text" id="montant" placeholder="Montant">
+  <button onclick="ajouterClient()">Enregistrer</button>
 
-    <h2 class="text-xl font-bold mb-3">Clients Enregistrés</h2>
-    <div id="liste">Chargement...</div>
-  </div>
+  <h3>Liste des clients</h3>
+  <div id="listeClients"></div>
+</div>
 
 <script>
-const SUPABASE_URL = 'COLLE_TA_URL_ICI'
-const SUPABASE_KEY = 'COLLE_TA_CLE_ICI'
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+// 1. COLLE TES CLÉS ICI
+const SUPABASE_URL = 'https://pcqygfhsduiqhsnbodhl.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjcXlnZmhzZHVpcWhzbmJvZGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxMTY3NjYsImV4cCI6MjA5OTY5Mjc2Nn0.V7hF11BNa5-sS1zEJyjuIB4kUi7el3ujDshFW65QpAM'
 
-async function ajouterClient(){
+// 2. CONNEXION SUPABASE
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+// 3. AJOUTER UN CLIENT
+async function ajouterClient() {
   const nom = document.getElementById('nom').value
   const montant = document.getElementById('montant').value
-  if(!nom) return alert("Mets un nom")
-  await db.from('clients').insert([{nom, montant}])
-  document.getElementById('nom').value = ''
-  document.getElementById('montant').value = ''
-  chargerClients()
+  
+  if(!nom || !montant) { alert('Remplis tous les champs'); return; }
+
+  const { error } = await supabase
+    .from('clients')
+    .insert([{ nom: nom, montant: montant }])
+
+  if(error) { alert('Erreur: ' + error.message) } 
+  else {
+    document.getElementById('nom').value = ''
+    document.getElementById('montant').value = ''
+    chargerClients()
+  }
 }
 
-async function chargerClients(){
-  let { data } = await db.from('clients').select('*').order('id', {ascending: false})
-  if(!data || data.length === 0) {
-    document.getElementById('liste').innerHTML = 'Aucun client'
-    return
+// 4. CHARGER LES CLIENTS
+async function chargerClients() {
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if(error) { console.log(error) }
+  else {
+    document.getElementById('listeClients').innerHTML = data.map(c => 
+      `<div class="client"><span>${c.nom} - ${c.montant}</span></div>`
+    ).join('')
   }
-  document.getElementById('liste').innerHTML = data.map(c => 
-    `<div class="bg-gray-800 p-3 rounded mb-2 flex justify-between">
-      <span>${c.nom}</span>
-      <span class="text-green-400">${c.montant} FC</span>
-    </div>`
-  ).join('')
 }
+
+// 5. CHARGER AU DÉMARRAGE
 chargerClients()
 </script>
 </body>
-        </html>
+</html>
