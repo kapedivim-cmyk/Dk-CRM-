@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DK CRM Pro - Web Studio</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-950 text-white p-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-2 text-green-400">DK CRM Pro</h1>
+    <p class="text-gray-400 mb-6">Le CRM qui sauve vraiment</p>
+    
+    <div class="bg-gray-900 p-4 rounded-lg mb-6">
+      <input id="nom" placeholder="Nom du Client" class="bg-gray-800 p-2 rounded w-full mb-2">
+      <input id="montant" placeholder="Montant FC" type="number" class="bg-gray-800 p-2 rounded w-full mb-2">
+      <button onclick="ajouterClient()" class="bg-green-600 hover:bg-green-700 p-2 rounded w-full font-bold">+ Ajouter Client</button>
+    </div>
+
+    <h2 class="text-xl font-bold mb-3">Clients Enregistrés</h2>
+    <div id="liste">Chargement...</div>
+  </div>
+
+<script>
+const SUPABASE_URL = 'COLLE_TA_URL_ICI'
+const SUPABASE_KEY = 'COLLE_TA_CLE_ICI'
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+async function ajouterClient(){
+  const nom = document.getElementById('nom').value
+  const montant = document.getElementById('montant').value
+  if(!nom) return alert("Mets un nom")
+  await db.from('clients').insert([{nom, montant}])
+  document.getElementById('nom').value = ''
+  document.getElementById('montant').value = ''
+  chargerClients()
+}
+
+async function chargerClients(){
+  let { data } = await db.from('clients').select('*').order('id', {ascending: false})
+  if(!data || data.length === 0) {
+    document.getElementById('liste').innerHTML = 'Aucun client'
+    return
+  }
+  document.getElementById('liste').innerHTML = data.map(c => 
+    `<div class="bg-gray-800 p-3 rounded mb-2 flex justify-between">
+      <span>${c.nom}</span>
+      <span class="text-green-400">${c.montant} FC</span>
+    </div>`
+  ).join('')
+}
+chargerClients()
+</script>
+</body>
+        </html>
